@@ -1,0 +1,26 @@
+paths:
+  equities_dir: "C:/Users/keylo/Desktop/stock_analyzer/bist100/stocks"
+  index_prices_csv: "C:/Users/keylo/Desktop/stock_analyzer/bist100/indices/FiyatEndeksleri_PriceIndices.csv"
+  xu100_vol_csv: "C:/Users/keylo/Desktop/stock_analyzer/indices/volatilite_XU100.csv"
+
+universe:
+  liquidity_lookback: 60
+  liquidity_top_n: 80
+  vol_lookback: 20
+  vol_top_n: 50
+
+target:
+  horizon_days: 5
+  up_threshold: 0.025
+  risk_horizon_days: 10
+  max_drawdown_threshold: -0.03
+
+selection:
+  top_k: 5
+  policy: "A"           # "A" veya "B"
+  candidate_pool: 15
+  confirm:
+    close_gt_ema20: true
+    ret10_gt_0: true
+    vol_z_gt_0: true
+    close_gt_vwap: false
