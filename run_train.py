@@ -10,7 +10,10 @@ from src.train import train_model
 def main():
     cfg = yaml.safe_load(open("config/settings.yaml", "r", encoding="utf-8"))
 
-    all_df = load_equities_folder(cfg["paths"]["equities_dir"])
+    all_df = load_equities_folder(
+        equities_dir=cfg["paths"]["equities_dir"],
+        test_csv_path=cfg["paths"].get("test_csv")
+    )
     feat = build_features(all_df)
     ds = add_labels(
         feat,

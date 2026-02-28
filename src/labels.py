@@ -34,10 +34,10 @@ def add_labels(df_feat: pd.DataFrame, horizon_days=5, up_threshold=0.025,
         close = g["CLOSING PRICE"]
 
         g["fwd_ret"] = forward_return(close, horizon_days)
-        g["y_up"] = (g["fwd_ret"] > up_threshold).astype(int)
+        g["y_up"] = np.where(g["fwd_ret"].isna(), np.nan, (g["fwd_ret"] > up_threshold).astype(float))
 
         g["fwd_maxdd"] = forward_max_drawdown(close, risk_horizon_days)
-        g["risk_flag"] = (g["fwd_maxdd"] < max_drawdown_threshold).astype(int)
+        g["risk_flag"] = np.where(g["fwd_maxdd"].isna(), np.nan, (g["fwd_maxdd"] < max_drawdown_threshold).astype(float))
 
         out.append(g)
     return pd.concat(out, ignore_index=True)

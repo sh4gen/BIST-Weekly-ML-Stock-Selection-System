@@ -17,7 +17,10 @@ def main():
     BASE = Path(__file__).resolve().parent
     cfg = yaml.safe_load(open(BASE / "config" / "settings.yaml", "r", encoding="utf-8"))
 
-    all_df = load_equities_folder(cfg["paths"]["equities_dir"])
+    all_df = load_equities_folder(
+        equities_dir=cfg["paths"]["equities_dir"],
+        test_csv_path=cfg["paths"].get("test_csv")
+    )
     all_df["TRADE DATE"] = pd.to_datetime(all_df["TRADE DATE"])
     print("Equities date range:", all_df["TRADE DATE"].min().date(), "->", all_df["TRADE DATE"].max().date())
 

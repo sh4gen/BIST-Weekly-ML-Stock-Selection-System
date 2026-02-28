@@ -1,3 +1,4 @@
+# src/features.py
 import pandas as pd
 import numpy as np
 
@@ -24,6 +25,8 @@ def build_features(all_df: pd.DataFrame) -> pd.DataFrame:
         g = g.sort_values("TRADE DATE").copy()
         c = g["CLOSING PRICE"]
 
+        # Temel Getiri ve Trend Özellikleri
+        g["ret_3"] = c.pct_change(3)  # YENİ: 3 Günlük kısa momentum
         g["ret_5"] = c.pct_change(5)
         g["ret_10"] = c.pct_change(10)
         g["ret_20"] = c.pct_change(20)
@@ -34,6 +37,25 @@ def build_features(all_df: pd.DataFrame) -> pd.DataFrame:
         g["ema20_over_ema50"] = (g["ema20"] / (g["ema50"] + 1e-9)) - 1.0
 
         g["rsi14"] = rsi(c, 14)
+
+        # YENİ: Bollinger Bands Genişliği (Sıkışma ve Patlama Göstergesi)
+        roll_mean20 = c.rolling(20).mean()
+        roll_std20 = c.rolling(20).std()
+        g["bb_width"] = (4 * roll_std20) / (roll_mean20 + 1e-9)
+
+        # YENİ: MACD Histogram (Erken Trend Dönüşü)
+        macd_line = ema(c, 12) - ema(c, 26)
+        macd_signal = ema(macd_line, 9)
+        g["macd_hist"] = macd_line - macd_signal
+
+        # YENİ: ATR (Gerçek Volatilite / Risk Ölçeği)
+        if "HIGHEST PRICE" in g.columns and "LOWEST PRICE" in g.columns:
+            prev_c = c.shift(1)
+            tr1 = g["HIGHEST PRICE"] - g["LOWEST PRICE"]
+            tr2 = (g["HIGHEST PRICE"] - prev_c).abs()
+            tr3 = (g["LOWEST PRICE"] - prev_c).abs()
+            tr = np.maximum(tr1, np.maximum(tr2, tr3))
+            g["atr_pct"] = tr.rolling(14).mean() / (c + 1e-9)
 
         # VWAP deviation
         if "VWAP" in g.columns:
@@ -55,15 +77,22 @@ def build_features(all_df: pd.DataFrame) -> pd.DataFrame:
 
     feat = pd.concat(out, ignore_index=True)
 
-    # seçilecek feature kolonları
+    # Sütunları Modele Tanıtıyoruz
     feature_cols = [
-        "ret_5","ret_10","ret_20",
-        "close_over_ema20","ema20_over_ema50",
+        "ret_3", "ret_5", "ret_10", "ret_20",
+        "close_over_ema20", "ema20_over_ema50",
         "rsi14",
+        "bb_width", "macd_hist", "atr_pct",  # YENİ EKLENEN AĞIR SIKLETLER
         "close_over_vwap",
         "vol_z20",
         "open_vol_ratio",
         "short_value_ratio",
     ]
-    keep = ["TRADE DATE","ticker","CLOSING PRICE"] + [c for c in feature_cols if c in feat.columns]
+    
+    # Boş kalan sütunları 0 ile doldurup modelin çökmesini engelle
+    for col in feature_cols:
+        if col in feat.columns:
+            feat[col] = feat[col].fillna(0.0)
+
+    keep = ["TRADE DATE", "ticker", "CLOSING PRICE"] + [c for c in feature_cols if c in feat.columns]
     return feat[keep].copy()

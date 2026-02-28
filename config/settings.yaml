@@ -1,7 +1,7 @@
 paths:
-  equities_dir: "C:/Users/keylo/Desktop/stock_analyzer/bist100/stocks"
-  index_prices_csv: "C:/Users/keylo/Desktop/stock_analyzer/bist100/indices/FiyatEndeksleri_PriceIndices.csv"
-  xu100_vol_csv: "C:/Users/keylo/Desktop/stock_analyzer/indices/volatilite_XU100.csv"
+  equities_dir: "x"
+  test_csv: "x.csv"
+  index_prices_csv: "x.csv"
 
 universe:
   liquidity_lookback: 60

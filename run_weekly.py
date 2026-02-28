@@ -17,7 +17,11 @@ def main():
     cfg = yaml.safe_load(open(BASE / "config" / "settings.yaml", "r", encoding="utf-8"))
 
     # 1) veriyi yükle
-    all_df = load_equities_folder(cfg["paths"]["equities_dir"])
+# Yeni Satır:
+    all_df = load_equities_folder(
+        equities_dir=cfg["paths"]["equities_dir"],
+        test_csv_path=cfg["paths"].get("test_csv")
+    )
     all_df["TRADE DATE"] = pd.to_datetime(all_df["TRADE DATE"])
     last_date = all_df["TRADE DATE"].max()
     print("Last trade date in equities:", last_date.date())
@@ -51,8 +55,11 @@ def main():
 
     # modelde kullanılan feature kolonlarıyla hizala
     bundle = joblib.load(BASE / "models" / "lgbm.pkl")
-    model = bundle["model"]
+    models_dict = bundle["model"]
     feature_cols = bundle["feature_cols"]
+
+    # Canlı sistem olduğu için en son eğitilen 'final' modelini al
+    model = models_dict["final"]
 
     # NaN temizle
     today = today.dropna(subset=feature_cols).copy()

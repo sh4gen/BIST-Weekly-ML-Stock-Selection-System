@@ -1,0 +1,10 @@
+outputs/
+indices/
+*.pth
+*.pt
+*.ckpt
+*.npy
+*.log
+*.tmp
+*.pkl
+*.csv

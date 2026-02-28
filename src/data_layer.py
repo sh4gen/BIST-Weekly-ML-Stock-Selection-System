@@ -30,13 +30,39 @@ def load_equity_csv(path: str | Path) -> pd.DataFrame:
     df["ticker"] = ticker
     return df
 
-def load_equities_folder(equities_dir: str | Path) -> pd.DataFrame:
+def load_equities_folder(equities_dir: str | Path, test_csv_path: str | Path | None = None) -> pd.DataFrame:
     equities_dir = Path(equities_dir)
     files = sorted(equities_dir.glob("*.csv"))
-    if not files:
-        raise FileNotFoundError(f"No CSV in: {equities_dir}")
-    frames = [load_equity_csv(p) for p in files]
+    
+    frames = []
+    if files:
+        frames = [load_equity_csv(p) for p in files]
+        
+    if test_csv_path and Path(test_csv_path).exists():
+        df_test = pd.read_csv(test_csv_path)
+
+        rename_map = {
+            "Date": "TRADE DATE",
+            "Ticker": "ticker",
+            "Open_TRY": "OPENING PRICE",
+            "High_TRY": "HIGHEST PRICE",
+            "Low_TRY": "LOWEST PRICE",
+            "Close_TRY": "CLOSING PRICE",
+            "Volume_Shares": "TOTAL TRADED VOLUME",
+            "Turnover_TRY": "TOTAL TRADED VALUE"
+        }
+        df_test = df_test.rename(columns=rename_map)
+        df_test["TRADE DATE"] = pd.to_datetime(df_test["TRADE DATE"], errors="coerce")
+        frames.append(df_test)
+        
+    if not frames:
+        raise FileNotFoundError("Hiçbir veri bulunamadı!")
+
     all_df = pd.concat(frames, ignore_index=True)
+    
+    all_df = all_df.dropna(subset=["TRADE DATE", "CLOSING PRICE"])
+    all_df = all_df.sort_values(["ticker", "TRADE DATE"]).reset_index(drop=True)
+    
     return all_df
 
 def load_xu100_from_price_indices(csv_path: str | Path) -> pd.DataFrame:
