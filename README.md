@@ -1,179 +1,140 @@
-# 📈 BIST Weekly ML Stock Selection System
+# 📈 BIST Quantitative Intelligence & ML Selection System
 
-A machine learning–based weekly stock selection and backtesting framework for BIST (Borsa Istanbul) equities.
+A professional-grade machine learning framework for real-time stock selection, backtesting, and automated analysis of BIST (Borsa Istanbul) equities.
 
-> 🤖 **Note:** The codebase for this project was largely developed using a **"vibecoding"** approach. However, the dataset preparation, feature logic, and critical quantitative decisions were carefully crafted manually.
-
-This project implements a complete quantitative research pipeline:
-* Data ingestion (BIST equity CSV files)
-* Feature engineering (technical + cross-sectional signals)
-* Label generation (forward returns + risk constraints)
-* LightGBM model training
-* Weekly A/B stock selection strategies
-* Automated PDF reporting
-* Weekly rolling backtest (5 trading day holding)
+🤖 **Note:** This project utilizes a *"vibecoding"* approach for rapid development, while maintaining rigorous manual control over feature logic, quantitative constraints, and dataset integrity.
 
 ---
 
-## 🚀 What This Project Does
+## 🚀 Key Features
 
-The system:
-1.  **Predicts** short-term upside probability for BIST stocks.
-2.  **Selects** weekly top candidates.
-3.  **Compares** two strategies:
-    * **Policy A** → Pure ML ranking
-    * **Policy B** → ML ranking + confirmation filters
-4.  **Runs** a weekly 5-day holding backtest.
-5.  **Generates** equity curves and performance metrics.
+**📡 Live Data Ingestion**  
+Real-time market data integration via Yahoo Finance API for the entire BIST100 universe.
+
+**🤖 AI-Powered Inference**  
+Short-term upside probability forecasting using XGBoost and LightGBM models.
+
+**🖥 Interactive Dashboard**  
+A modern, dark-themed Streamlit terminal for real-time monitoring and strategy tracking.
+
+**🧠 Dual-Strategy Logic**
+- **Policy A (Dynamic):** Pure ML ranking of the top 10 high-probability candidates.  
+- **Policy B (Sniper):** High-conviction strategy requiring a **>56% confidence threshold** to act.
+
+**🗂 Automated Snapshot Logging**  
+Daily predictions are automatically exported as timestamped CSV reports for historical tracking.
+
+**📊 Backtesting Engine**  
+Weekly rolling 5-day holding period simulation with performance metrics:
+- Sharpe Ratio  
+- Maximum Drawdown  
+- Win Rate  
 
 ---
 
 ## 🏗 Project Structure
 
-```text
-bist100/
+```
+BIST-Weekly-ML-Stock-Selection-System/
 │
-├── config/
-│   └── settings.yaml
+├── app.py                # Modern Streamlit Dashboard (Live Terminal)
+├── run_live_api.py       # CLI-based live market scanner
+├── run_train.py          # Model training pipeline
+├── run_backtest.py       # Historical simulation engine
 │
-├── models/
-│   └── lgbm.pkl
+├── src/                  # Core Quantitative Logic
+│   ├── features.py       # Technical & Cross-sectional signals
+│   ├── scoring.py        # Strategy Policy (A & B) implementations
+│   ├── data_layer.py     # Data ingestion & API management
+│   └── ...
 │
-├── reports/
-│   ├── weekly_report_YYYY-MM-DD.pdf
-│   ├── weekly_picks_A_*.csv
-│   ├── weekly_picks_B_*.csv
-│   ├── backtest_summary.csv
-│   └── backtest_equity_curve.png
-│
-├── src/
-│   ├── data_layer.py
-│   ├── features.py
-│   ├── labels.py
-│   ├── universe.py
-│   ├── scoring.py
-│   ├── report.py
-│   └── backtest.py
-│
-├── run_train.py
-├── run_weekly.py
-└── run_backtest.py
+├── models/               # Serialized ML Models (XGBoost/LGBM)
+├── outputs/              # Daily CSV Snapshots & Reports
+└── reports/              # Backtest visualizations & PDFs
 ```
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Installation & Setup
 
-**1️⃣ Create Environment**
+### 1️⃣ Environment Setup
 ```bash
-conda create -n bist python=3.10
+conda create -n bist python=3.13
 conda activate bist
 ```
 
-**2️⃣ Install Dependencies**
+### 2️⃣ Dependencies
 ```bash
-pip install pandas numpy lightgbm scikit-learn matplotlib joblib pyyaml
+pip install pandas numpy xgboost lightgbm yfinance streamlit joblib matplotlib
+```
+
+### 3️⃣ Launch the Terminal
+To start the live interactive dashboard:
+
+```bash
+streamlit run app.py
 ```
 
 ---
 
-## 🧠 Model Training
+## 📊 Live Operations
 
-Train the LightGBM model by running:
-```bash
-python run_train.py
-```
-This script will build features, generate labels, train the model, and save it to `models/lgbm.pkl`.
+### 🖥 The Dashboard
+Accessible via **localhost:8501**, the terminal provides:
+
+- Real-time Analysis of BIST100 universe  
+- Automatic feature computation  
+- 15-minute refresh during market hours  
+- ML-based target price forecasting  
+- Daily CSV snapshot logging  
 
 ---
 
-## 📊 Weekly Stock Selection
+## 🤖 Model Architecture
 
-Generate weekly picks and the PDF report:
-```bash
-python run_weekly.py
-```
-**Outputs:**
-* `weekly_picks_A_YYYY-MM-DD.csv`
-* `weekly_picks_B_YYYY-MM-DD.csv`
-* `weekly_overlap_YYYY-MM-DD.csv`
-* `weekly_report_YYYY-MM-DD.pdf`
+The system currently utilizes an **XGBoost Classifier** optimized for short-term directionality.
+
+### Feature Set
+- Volatility Z-scores & ATR%
+- Bollinger Band Width & RSI
+- Trend Alignment (EMA relationships)
+- Volume Confirmation
+- Cross-sectional signals
+
+---
+
+## 📌 Quantitative Logic
+
+### Universe Selection
+- **BIST 100** coverage  
+- Liquidity filtering via volume confirmation  
 
 ### Strategies
-* **Policy A:** Top-K stocks ranked purely by ML probability.
-* **Policy B:** Top-K stocks ranked by ML probability + confirmation filters (Close > EMA20, Positive short-term momentum, Volume confirmation).
+
+**Policy A — Dynamic Exposure**  
+Selects the top 10 stocks by ML rank.  
+Ideal for maintaining continuous market exposure.
+
+**Policy B — Sniper Strategy**  
+Only triggers when probability > **56%**.  
+If no candidate qualifies → system recommends **100% cash position**.
 
 ---
 
-## 🔁 Weekly Backtest (5-Day Holding)
+## 🧪 Research & Disclaimer
 
-Run historical simulation:
-```bash
-python run_backtest.py
-```
-**Outputs:**
-* `backtest_summary.csv`
-* `backtest_equity_curve.csv`
-* `backtest_trades_A.csv`
-* `backtest_trades_B.csv`
-* `backtest_equity_curve.png`
+⚠️ **For research and educational purposes only.**
 
-**Metrics Included:** Total Return, Average Weekly Return, Win Rate, Maximum Drawdown, Sharpe Ratio.
+Quantitative trading involves significant risk.  
+This framework does **not** currently account for:
 
----
-
-## 📌 Strategy Logic
-
-**Universe Selection**
-* Liquidity filter (rolling volume)
-* Volatility filter (ATR%)
-
-**Feature Set**
-* 5 / 10 / 20 day returns
-* EMA relationships
-* RSI (14)
-* Volume Z-score
-* Trend alignment
-
-**Label Definition**
-* Binary classification: Positive forward return above threshold.
-* Risk constraint using maximum drawdown filter.
-
----
-
-## 🗄️ Data Sources
-
-The historical equity data and index information used in this project are sourced from:
-* [Kaggle: Borsa Istanbul (BIST100) Index 2010-2020](https://www.kaggle.com/datasets/mertopkaya/borsa-istanbul-bist100-index-20102020)
-* [Borsa Istanbul Official Index Data](https://www.borsaistanbul.com/en/index/index-data)
-
----
-
-## 🧪 Research Disclaimer
-
-⚠️ **This project is for research and educational purposes only.**
-Backtest results may contain:
-* Lookahead bias
-* Data leakage
-* Survivorship bias
-* No transaction cost modeling
-* No slippage modeling
-
-**Do not use in live trading without proper validation.**
-
----
-
-## 📈 Future Improvements
-
-- [ ] Add transaction cost modeling
-- [ ] Add walk-forward retraining
-- [ ] Add probability calibration
-- [ ] Add portfolio optimization layer
-- [ ] Add regime detection
-- [ ] Add live data integration
+- Transaction costs & slippage *(planned)*  
+- Macro-economic regime shifts  
+- Market-wide black swan events  
 
 ---
 
 ## 👨‍💻 Author
 
-**Aşkın Ali Berbergil** *Machine Learning & Quantitative Research* Turkey
+**Ali Berbergil**  
+Machine Learning & Quantitative Research
